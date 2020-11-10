@@ -1,34 +1,31 @@
 import React from 'react'
 import styled from 'styled-components'
-import { Paper } from '@material-ui/core'
 
 export const Container = styled.div`
-  width: 400px;
-  > div {
-    padding: 10px;
-  }
-`
-
-export const UserHeader = styled.div`
   display: flex;
-  align-items: center;
-  > span {
-    margin-left: 10px;
-  }
-  > img {
-    width: 50px;
+  flex-direction: column;
+  justify-content: center;
+  height: 30px;
+
+  > div {
+    display: flex;
+
+    > a:nth-child(2) {
+      margin-left: 10px;
+    }
   }
 `
 
-const User = ({ avatar_url, login }) => {
+const User = ({ user }) => {
   return (
-    <Container>
-      <Paper elevation={3}>
-        <UserHeader>
-          <img src={avatar_url} alt="user-avatar"></img>
-          <span>{login}</span>
-        </UserHeader>
-      </Paper>
+    <Container hasRepo={!!user.repo}>
+      <span>{user.name}</span>
+      <div>
+        {user.repo && <a href={user.repo.html_url}>repo</a>}
+        {user.repo && user.repo.pulls && user.repo.pulls.length > 0 && (
+          <a href={user.repo.pulls[0].html_url}>pr</a>
+        )}
+      </div>
     </Container>
   )
 }

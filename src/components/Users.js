@@ -6,6 +6,7 @@ import {
   usersWithRepoAndPr,
   usersWithRepoAndNoPr,
   usersWithoutRepo,
+  reposWithoutUser,
 } from '../state'
 import { Paper } from '@material-ui/core'
 
@@ -62,6 +63,8 @@ const Users = () => {
       <UserList selector={usersWithRepoAndNoPr} />
       <h2>Needs to create repository and PR</h2>
       <UserList selector={usersWithoutRepo} />
+      <h2>Repos with no user match</h2>
+      <UserList selector={reposWithoutUser} />
     </Container>
   )
 }

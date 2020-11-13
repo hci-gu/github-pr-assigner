@@ -145,6 +145,16 @@ export const suggestedReviewers = selector({
   },
 })
 
+export const reposWithoutUser = selector({
+  key: 'repos-without-user',
+  get: ({ get }) => {
+    const repos = get(reposState)
+    const usernames = get(getUsers).map((u) => u.name)
+
+    return repos.filter((repo) => !usernames.includes(repo.name))
+  },
+})
+
 export const reviewerForUsername = selectorFamily({
   key: 'reviewer-for-username',
   get: (key) => ({ get }) => {

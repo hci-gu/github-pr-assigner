@@ -15,10 +15,6 @@ export const usersState = atom({
   key: 'users',
   default: allUsers.split(','),
 })
-export const reposCreatedEventsState = atom({
-  key: 'repos-created-events',
-  default: [],
-})
 export const reposState = atom({
   key: 'repos',
   default: [],
@@ -44,15 +40,12 @@ export const githubReviewers = selector({
 export const reposMap = selector({
   key: 'repos-map',
   get: ({ get }) => {
-    const events = get(reposCreatedEventsState)
     const repos = get(reposState)
 
-    return events.reduce((acc, event) => {
-      const repoName = event.repo.name.replace('gu-tig169/', '')
-      const repo = repos.find((r) => r.name === repoName)
-      acc[repoName] = {
+    return repos.reduce((acc, repo) => {
+      acc[repo.name] = {
         ...repo,
-        user: event.actor.login,
+        user: repo.owner ? repo.owner.login : null,
       }
       return acc
     }, {})

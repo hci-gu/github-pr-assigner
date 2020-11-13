@@ -2,8 +2,8 @@ import React, { useEffect } from 'react'
 import { useRecoilState } from 'recoil'
 import styled from 'styled-components'
 
-import { reposCreatedEventsState, reposState, refreshState } from './state'
-import { getEvents, getRepos } from './api'
+import { reposState, refreshState } from './state'
+import { getRepos } from './api'
 import Users from './components/Users'
 
 const Container = styled.div`
@@ -21,7 +21,6 @@ const Container = styled.div`
 `
 
 function App() {
-  const [, setReposCreatedEventsState] = useRecoilState(reposCreatedEventsState)
   const [, setRepos] = useRecoilState(reposState)
   const [refresh] = useRecoilState(refreshState)
 
@@ -33,15 +32,6 @@ function App() {
     run()
     return
   }, [refresh, setRepos])
-
-  useEffect(() => {
-    const run = async () => {
-      const _events = await getEvents()
-      setReposCreatedEventsState(_events)
-    }
-    run()
-    return
-  }, [setReposCreatedEventsState])
 
   return (
     <Container>

@@ -43,7 +43,7 @@ export const reposMap = selector({
     const repos = get(reposState)
 
     return repos.reduce((acc, repo) => {
-      acc[repo.name] = {
+      acc[repo.name.toLowerCase()] = {
         ...repo,
         user: repo.owner ? repo.owner.login : null,
       }
@@ -151,7 +151,7 @@ export const reposWithoutUser = selector({
     const repos = get(reposState)
     const usernames = get(getUsers).map((u) => u.name)
 
-    return repos.filter((repo) => !usernames.includes(repo.name))
+    return repos.filter((repo) => !usernames.includes(repo.name.toLowerCase()))
   },
 })
 

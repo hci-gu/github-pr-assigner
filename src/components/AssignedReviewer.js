@@ -15,7 +15,8 @@ const AssignedReviewer = ({ username }) => {
   return (
     <Container>
       <span>assigned reviewer</span>
-      <a href={reviewer.repo.html_url}>{reviewer.name}</a>
+      {reviewer && <a href={reviewer.repo.html_url}>{reviewer.name}</a>}
+      {!reviewer && <a href={`https://github.com/${username}`}>{username}</a>}
     </Container>
   )
 }

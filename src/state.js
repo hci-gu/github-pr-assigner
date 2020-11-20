@@ -127,6 +127,5 @@ export const debugSelector = selector({
   key: 'debug-selector',
   get: ({ get }) => {
     const reviewers = get(usersAssignedAsReviewers)
-    console.log(reviewers)
   },
 })

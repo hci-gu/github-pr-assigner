@@ -1,7 +1,7 @@
 import React from 'react'
 import styled from 'styled-components'
 import { useRecoilValue } from 'recoil'
-import { debugSelector, potentialReviewersState, getUsers } from '../state'
+import { potentialReviewersState } from '../state'
 import { DataGrid } from '@material-ui/data-grid'
 
 import AssignedReviewer from './AssignedReviewer'
@@ -9,9 +9,11 @@ import ReviewerCheckbox from './ReviewerCheckbox'
 
 export const Container = styled.div`
   width: 1400px;
-  height: 2500px;
+  height: 100vh;
   display: flex;
   flex-direction: column;
+
+  ${({ small }) => small && `width: calc(50% - 25px);`}
 `
 
 const PullRequest = styled.div`
@@ -58,7 +60,9 @@ const columns = [
     width: 125,
     renderCell: (params) => {
       return (
-        <span onClick={() => console.log(params.data.raw)}>{params.value}</span>
+        <a href={`https://github.com/gu-tig169/${params.value}`}>
+          {params.value}
+        </a>
       )
     },
   },
@@ -107,13 +111,13 @@ const mapUserToRow = (user, potentialReviewers) => {
   }
 }
 
-const Users = () => {
-  useRecoilValue(debugSelector)
+const Users = ({ selector, small = false, title }) => {
+  const users = useRecoilValue(selector)
   const potentialReviewers = useRecoilValue(potentialReviewersState)
-  const users = useRecoilValue(getUsers)
 
   return (
-    <Container>
+    <Container small={small}>
+      {title && <h1>{title}</h1>}
       <DataGrid
         columns={columns}
         rows={users.map((u) => mapUserToRow(u, potentialReviewers))}

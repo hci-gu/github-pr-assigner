@@ -8,13 +8,23 @@ import { requestReviewer } from '../api'
 const Container = styled.div`
   display: flex;
   flex-direction: row;
-  justify-content: flex-end;
-  padding: 0 20px;
 
   width: 100%;
 
   > button {
-    margin: 5px 20px;
+    margin: 5px 10px;
+    height: 20px;
+  }
+  > div {
+    height: 20px;
+    > label {
+      height: 0px;
+      font-size: 12px;
+    }
+    > div {
+      height: 20px;
+      font-size: 14px;
+    }
   }
 `
 

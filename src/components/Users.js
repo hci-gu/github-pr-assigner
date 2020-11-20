@@ -1,70 +1,124 @@
 import React from 'react'
 import styled from 'styled-components'
 import { useRecoilValue } from 'recoil'
-import {
-  usersWithReviewer,
-  usersWithRepoAndPr,
-  usersWithRepoAndNoPr,
-  usersWithoutRepo,
-  reposWithoutUser,
-} from '../state'
-import { Paper } from '@material-ui/core'
+import { debugSelector, potentialReviewersState, getUsers } from '../state'
+import { DataGrid } from '@material-ui/data-grid'
 
-import User from './User'
-import AssignReviewer from './AssignReviewer'
 import AssignedReviewer from './AssignedReviewer'
+import ReviewerCheckbox from './ReviewerCheckbox'
 
 export const Container = styled.div`
+  width: 1400px;
+  height: 2500px;
   display: flex;
   flex-direction: column;
+`
 
-  > div {
-    margin-top: 10px;
-    width: 500px;
-    display: flex;
-    padding: 10px;
+const PullRequest = styled.div`
+  display: flex;
+  flex-direction: column;
+  margin-top: -25px;
 
-    justify-content: space-between;
+  > a {
+    height: 15px;
+  }
+
+  > a:nth-child(1) {
+    ${({ state }) => state === 'OPEN' && `color: blue;`}
+    ${({ state }) => state === 'MERGED' && `color: green;`}
+    ${({ state }) => state === 'CLOSED' && `color: red;`}
   }
 `
 
-const UserList = ({ selector }) => {
-  const users = useRecoilValue(selector)
-
-  if (users.length === 0) {
-    return <div>No users</div>
+const renderPr = ({ value }) => {
+  if (!value) {
+    return <span>-</span>
   }
+  return (
+    <PullRequest state={value.state}>
+      <a href={value.url}>{value.title}</a>
+      {value.reviewRequests.length > 0 && (
+        <AssignedReviewer username={value.reviewRequests[0].login} />
+      )}
+    </PullRequest>
+  )
+}
 
-  return users.map((user) => {
-    const userPr = user.repo && user.repo.pulls && user.repo.pulls[0]
-    const assignedReviewer = userPr && userPr.requested_reviewers[0]
+const columns = [
+  {
+    field: 'reviewer',
+    width: 50,
+    renderCell: (params) => (
+      <ReviewerCheckbox username={params.data.username} />
+    ),
+  },
+  {
+    field: 'username',
+    header: 'Username',
+    width: 125,
+    renderCell: (params) => {
+      return (
+        <span onClick={() => console.log(params.data.raw)}>{params.value}</span>
+      )
+    },
+  },
+  {
+    field: 'github',
+    header: 'Github username',
+    width: 200,
+    renderCell: (params) => {
+      return <a href={`https://github.com/${params.value}`}>{params.value}</a>
+    },
+  },
+  { field: 'pr-1', header: 'Steg 1', width: 150, renderCell: renderPr },
+  { field: 'pr-2', header: 'Steg 2', width: 150, renderCell: renderPr },
+  { field: 'pr-3', header: 'Steg 3', width: 150, renderCell: renderPr },
+  { field: 'pr-4', header: 'Steg 4', width: 150, renderCell: renderPr },
+  { field: 'pr-5', header: 'Steg 5', width: 150, renderCell: renderPr },
+  { field: 'openPR', header: 'openPR', width: 100 },
+  { field: 'assign', header: 'Assign', width: 150 },
+]
 
-    return (
-      <Paper key={`User_${user.name}`}>
-        <User user={user} />
-        {!assignedReviewer ? <AssignReviewer userPr={userPr} /> : <div></div>}
-        {assignedReviewer ? (
-          <AssignedReviewer username={assignedReviewer.login} />
-        ) : (
-          <div></div>
-        )}
-      </Paper>
-    )
-  })
+const mapUserToRow = (user, potentialReviewers) => {
+  const pulls = user.repo ? user.repo.pullRequests : []
+  const assigned = Object.keys(potentialReviewers).reduce((acc, curr) => {
+    acc[potentialReviewers[curr].assigned] = curr
+    return acc
+  }, {})
+
+  return {
+    id: user.name,
+    username: user.name,
+    github: user.repo ? user.repo.user : '-',
+    ...pulls.reduce((acc, pull) => {
+      acc[`pr-${pull.number}`] = pull
+      return acc
+    }, {}),
+    openPR: pulls.reduce((acc, pull) => {
+      if (pull.state === 'OPEN') {
+        acc = true
+      }
+      return acc
+    }, false),
+    assign: assigned[user.name],
+    reviewer: potentialReviewers[user.name].value,
+    disabled: false,
+    raw: user,
+  }
 }
 
 const Users = () => {
+  useRecoilValue(debugSelector)
+  const potentialReviewers = useRecoilValue(potentialReviewersState)
+  const users = useRecoilValue(getUsers)
+
   return (
     <Container>
-      <UserList selector={usersWithReviewer} />
-      <h2>Can be assigned reviewer</h2>
-      <UserList selector={usersWithRepoAndPr} />
-      <h2>Needs to create PR</h2>
-      <UserList selector={usersWithRepoAndNoPr} />
-      <h2>Needs to create repository and PR</h2>
-      <UserList selector={usersWithoutRepo} />
-      <h2>Repos with no user match</h2>
-      <UserList selector={reposWithoutUser} />
+      <DataGrid
+        columns={columns}
+        rows={users.map((u) => mapUserToRow(u, potentialReviewers))}
+        loading={users.length === 0}
+      ></DataGrid>
     </Container>
   )
 }

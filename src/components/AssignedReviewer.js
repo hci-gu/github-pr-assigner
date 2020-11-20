@@ -3,22 +3,12 @@ import styled from 'styled-components'
 import { useRecoilValue } from 'recoil'
 import { reviewerForUsername } from '../state'
 
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-`
-
 const AssignedReviewer = ({ username }) => {
   const reviewer = useRecoilValue(reviewerForUsername(username))
 
-  return (
-    <Container>
-      <span>assigned reviewer</span>
-      {reviewer && <a href={reviewer.repo.html_url}>{reviewer.name}</a>}
-      {!reviewer && <a href={`https://github.com/${username}`}>{username}</a>}
-    </Container>
-  )
+  if (reviewer) return <a href={reviewer.repo.url}>{reviewer.name}</a>
+
+  return <a href={`https://github.com/${username}`}>{username}</a>
 }
 
 export default AssignedReviewer

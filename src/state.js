@@ -1,11 +1,6 @@
 import { atom, selector, selectorFamily } from 'recoil'
+import { openPrForUser, reviewersForRepoList, reviewerForUser } from './utils'
 const allUsers = process.env.REACT_APP_USERS
-
-const shuffle = (arr) =>
-  arr
-    .map((a) => ({ sort: Math.random(), value: a }))
-    .sort((a, b) => a.sort - b.sort)
-    .map((a) => a.value)
 
 export const refreshState = atom({
   key: 'refresh',
@@ -19,21 +14,23 @@ export const reposState = atom({
   key: 'repos',
   default: [],
 })
+export const potentialReviewersState = atom({
+  key: 'potential-reviewers',
+  default: allUsers.split(',').reduce((acc, username) => {
+    acc[username] = {
+      value: false,
+      assigned: null,
+    }
+    return acc
+  }, {}),
+})
 
 export const githubReviewers = selector({
   key: 'github-reviewers',
   get: ({ get }) => {
     const repos = get(reposState)
 
-    return repos.reduce((acc, repo) => {
-      let reviewers = []
-      if (repo.pulls.length > 0) {
-        repo.pulls.forEach((pull) => {
-          reviewers = [...reviewers, ...pull.requested_reviewers]
-        })
-      }
-      return [...acc, ...reviewers]
-    }, [])
+    return reviewersForRepoList(repos)
   },
 })
 
@@ -45,7 +42,6 @@ export const reposMap = selector({
     return repos.reduce((acc, repo) => {
       acc[repo.name.toLowerCase()] = {
         ...repo,
-        user: repo.owner ? repo.owner.login : null,
       }
       return acc
     }, {})
@@ -70,36 +66,7 @@ export const usersWithReviewer = selector({
   get: ({ get }) => {
     const users = get(getUsers)
 
-    return users.filter((user) => {
-      const userPr = user.repo && user.repo.pulls && user.repo.pulls[0]
-      const assignedReviewer = userPr && userPr.requested_reviewers[0]
-      return !!assignedReviewer
-    })
-  },
-})
-
-export const usersWithRepoAndPr = selector({
-  key: 'users-with-repo-and-pr',
-  get: ({ get }) => {
-    const users = get(getUsers)
-
-    return users.filter((user) => {
-      const userPr = user.repo && user.repo.pulls && user.repo.pulls[0]
-      const assignedReviewer = userPr && userPr.requested_reviewers[0]
-      return !!userPr && !assignedReviewer
-    })
-  },
-})
-
-export const usersWithRepoAndNoPr = selector({
-  key: 'users-with-repo-and-no-pr',
-  get: ({ get }) => {
-    const users = get(getUsers)
-
-    return users.filter((user) => {
-      const userPr = user.repo && user.repo.pulls && user.repo.pulls[0]
-      return !!user.repo && !userPr
-    })
+    return users.filter((user) => !!reviewerForUser(user))
   },
 })
 
@@ -112,12 +79,16 @@ export const usersWithRepo = selector({
   },
 })
 
-export const usersWithoutRepo = selector({
-  key: 'users-without-repo',
+export const usersWithOpenPrAndNoReviewer = selector({
+  key: 'users-with-open-pr-no-reviewer',
   get: ({ get }) => {
     const users = get(getUsers)
 
-    return users.filter((user) => !user.repo)
+    return users.filter((user) => {
+      const pr = openPrForUser(user)
+      const reviewer = reviewerForUser(user)
+      return !!pr && !reviewer
+    })
   },
 })
 
@@ -125,9 +96,7 @@ export const usersAssignedAsReviewers = selector({
   key: 'users-assigned-as-reviewers',
   get: ({ get }) => {
     const users = get(getUsers)
-    const reviewerGithubUsernames = get(githubReviewers).map(
-      (reviewer) => reviewer.login
-    )
+    const reviewerGithubUsernames = get(githubReviewers)
 
     return users.filter(
       (user) => user.repo && reviewerGithubUsernames.includes(user.repo.user)
@@ -141,17 +110,7 @@ export const suggestedReviewers = selector({
     const users = get(usersWithRepo)
     const reviewerUsernames = get(usersAssignedAsReviewers).map((u) => u.name)
 
-    return shuffle(users.filter((u) => !reviewerUsernames.includes(u.name)))
-  },
-})
-
-export const reposWithoutUser = selector({
-  key: 'repos-without-user',
-  get: ({ get }) => {
-    const repos = get(reposState)
-    const usernames = get(getUsers).map((u) => u.name)
-
-    return repos.filter((repo) => !usernames.includes(repo.name.toLowerCase()))
+    return users.filter((u) => !reviewerUsernames.includes(u.name))
   },
 })
 
@@ -160,6 +119,14 @@ export const reviewerForUsername = selectorFamily({
   get: (key) => ({ get }) => {
     const reviewers = get(usersAssignedAsReviewers)
 
-    return reviewers.find((u) => u.repo.user === key)
+    return reviewers.find((u) => u.name === key)
+  },
+})
+
+export const debugSelector = selector({
+  key: 'debug-selector',
+  get: ({ get }) => {
+    const reviewers = get(usersAssignedAsReviewers)
+    console.log(reviewers)
   },
 })

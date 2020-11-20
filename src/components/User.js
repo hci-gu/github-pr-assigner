@@ -22,9 +22,7 @@ const User = ({ user }) => {
       <span>{user.name}</span>
       <div>
         {user.repo && <a href={user.repo.html_url}>repo</a>}
-        {user.repo && user.repo.pulls && user.repo.pulls.length > 0 && (
-          <a href={user.repo.pulls[0].html_url}>pr</a>
-        )}
+        {user.repo && user.repo.pulls.map((p) => <a href={p.html_url}>pr</a>)}
       </div>
     </Container>
   )

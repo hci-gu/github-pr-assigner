@@ -7,9 +7,14 @@ export const openPrForUser = (user) => {
 
 export const reviewerForUser = (user) => {
   const pr = openPrForUser(user)
-  if (pr) {
-    return pr && pr.reviewRequests[0]
+  if (pr) return reviewerForPr(pr)
+}
+
+export const reviewerForPr = (pr) => {
+  if (pr.reviewers.length) {
+    return { login: pr.reviewers[0] }
   }
+  return pr.reviewRequests[0]
 }
 
 export const reviewersForRepoList = (repos) =>
@@ -19,7 +24,11 @@ export const reviewersForRepoList = (repos) =>
       ...repo.pullRequests
         .filter((pr) => pr.state === 'OPEN')
         .reduce(
-          (acc, pull) => [...acc, ...pull.reviewRequests.map((r) => r.login)],
+          (acc, pull) => [
+            ...acc,
+            ...pull.reviewRequests.map((r) => r.login),
+            ...pull.reviewers,
+          ],
           []
         ),
     ]

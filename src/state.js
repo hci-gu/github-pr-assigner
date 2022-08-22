@@ -34,6 +34,19 @@ export const githubReviewers = selector({
   },
 })
 
+export const githubUsersNotAssignedOrReviewing = selector({
+  key: 'github-not-assigned-or-reviewing',
+  get: ({ get }) => {
+    const allUsers = get(getUsers)
+    const reviewers = get(githubReviewers)
+
+    return allUsers.filter((user) => {
+      const username = user.repo ? user.repo.user : undefined
+      return !reviewers.includes(username)
+    })
+  },
+})
+
 export const reposMap = selector({
   key: 'repos-map',
   get: ({ get }) => {
@@ -61,12 +74,24 @@ export const getUsers = selector({
   },
 })
 
+export const getAllGithubUsers = selector({
+  key: 'github-usernames-selector',
+  get: ({ get }) => {
+    const users = get(getUsers)
+
+    return users.map((user) => user.repo && user.repo.user)
+  },
+})
+
 export const usersWithReviewer = selector({
   key: 'users-with-reviewer-selector',
   get: ({ get }) => {
     const users = get(getUsers)
 
-    return users.filter((user) => !!reviewerForUser(user))
+    return users.filter((user) => {
+      console.log(user, reviewerForUser(user))
+      return !!reviewerForUser(user)
+    })
   },
 })
 
@@ -97,7 +122,6 @@ export const usersAssignedAsReviewers = selector({
   get: ({ get }) => {
     const users = get(getUsers)
     const reviewerGithubUsernames = get(githubReviewers)
-
     return users.filter(
       (user) => user.repo && reviewerGithubUsernames.includes(user.repo.user)
     )
@@ -116,11 +140,13 @@ export const suggestedReviewers = selector({
 
 export const reviewerForUsername = selectorFamily({
   key: 'reviewer-for-username',
-  get: (key) => ({ get }) => {
-    const reviewers = get(usersAssignedAsReviewers)
+  get:
+    (key) =>
+    ({ get }) => {
+      const reviewers = get(usersAssignedAsReviewers)
 
-    return reviewers.find((u) => u.name === key)
-  },
+      return reviewers.find((u) => u.name === key)
+    },
 })
 
 export const debugSelector = selector({

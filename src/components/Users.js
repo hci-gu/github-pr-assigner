@@ -6,6 +6,7 @@ import { DataGrid } from '@material-ui/data-grid'
 
 import AssignedReviewer from './AssignedReviewer'
 import ReviewerCheckbox from './ReviewerCheckbox'
+import { reviewerForPr } from '../utils'
 
 export const Container = styled.div`
   width: 1400px;
@@ -36,12 +37,12 @@ const renderPr = ({ value }) => {
   if (!value) {
     return <span>-</span>
   }
+  const reviewer = reviewerForPr(value)
+
   return (
     <PullRequest state={value.state}>
       <a href={value.url}>{value.title}</a>
-      {value.reviewRequests.length > 0 && (
-        <AssignedReviewer username={value.reviewRequests[0].login} />
-      )}
+      {reviewer && <AssignedReviewer username={reviewer.login} />}
     </PullRequest>
   )
 }
@@ -50,9 +51,8 @@ const columns = [
   {
     field: 'reviewer',
     width: 50,
-    renderCell: (params) => (
-      <ReviewerCheckbox username={params.data.username} />
-    ),
+    renderCell: (params) =>
+      params.data ? <ReviewerCheckbox username={params.data.username} /> : null,
   },
   {
     field: 'username',
@@ -60,7 +60,7 @@ const columns = [
     width: 125,
     renderCell: (params) => {
       return (
-        <a href={`https://github.com/gu-tig169/${params.value}`}>
+        <a href={`https://github.com/gu-tig169-ht21/${params.value}`}>
           {params.value}
         </a>
       )

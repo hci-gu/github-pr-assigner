@@ -1,7 +1,12 @@
 import React from 'react'
 import styled from 'styled-components'
 import { useRecoilValue, useRecoilState } from 'recoil'
-import { potentialReviewersState, usersWithOpenPrAndNoReviewer } from '../state'
+import {
+  githubReviewers,
+  githubUsersNotAssignedOrReviewing,
+  potentialReviewersState,
+  usersWithOpenPrAndNoReviewer,
+} from '../state'
 import { shuffle, pickNonMatchFromArray, openPrForUser } from '../utils'
 import * as api from '../api'
 
@@ -15,13 +20,23 @@ const Container = styled.div`
 `
 
 const Reviewers = () => {
+  const usersNotAssignedOrReviewing = useRecoilValue(
+    githubUsersNotAssignedOrReviewing
+  )
   const [potentialReviewers, setPotentialReviewers] = useRecoilState(
     potentialReviewersState
   )
   const userRepos = useRecoilValue(usersWithOpenPrAndNoReviewer)
+  console.log('reviewers')
+  console.log(usersNotAssignedOrReviewing)
+  console.log(potentialReviewers)
+
   const reviewersList = Object.keys(potentialReviewers).filter(
     (username) => potentialReviewers[username].value
   )
+  // .filter((name) => !usersWhoAreReviewers.includes(name))
+
+  console.log(reviewersList)
 
   const populateReviewers = () => {
     let users = shuffle(userRepos).map((u) => u.name)
